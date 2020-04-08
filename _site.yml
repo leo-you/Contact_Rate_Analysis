@@ -1,7 +1,7 @@
-name: "my-website"
+name: "Contact-Rate-Analysis"
 output_dir: "."
 navbar:
-  title: "My Website"
+  title: "Contact Rate Analysis"
   left:
     - text: "Home"
       href: index.html
