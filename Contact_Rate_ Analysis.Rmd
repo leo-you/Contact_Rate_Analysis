@@ -1,0 +1,138 @@
+---
+title: "Contact Rate Analysis"
+output: html_document
+---
+
+```{r setup, error=FALSE,warning=FALSE,include=FALSE}
+knitr::opts_chunk$set(error = FALSE,warning = FALSE)
+```
+
+## Introduction
+
+The purpose of this analysis is to see if the physician liasons' contact rate is affected when we applied to a customized call plan compared to a flat 15 calls across the board.
+
+We start with loading library and dataset in R studio.
+
+```{r error=FALSE,warning=FALSE,message=FALSE}
+#Load necessary library
+library(dplyr)
+library(readr)
+library(ggplot2)
+library(plotly)
+#Load Data
+ContactRate <- read_csv("Contact Rate Analysis.csv")
+ContactRate<- subset(ContactRate, ContactRate <=1)
+
+```
+
+## Data
+
+The data is from the 6501 report, which contains PL name, # of calls per day, # of contacts met per day and contact rate. A region column has been added to view contact rate by geography.
+
+The number of calls required for each PL increased to 15 per day starting from 6/1/2016 through 9/30/2016 (4 months). As of 10/1/2016, a customized call plan has been implemented. Physician liasons are doing 10, 12 or 13 calls per day based on the density of accounts and radius of a certain territory.
+
+Group A below represents contacts between **6/1/2016** and **9/30/2016** and Group B below represents contacts between **10/1/2016** and **2/28/2017**.
+
+
+```{r}
+
+DT::datatable(ContactRate,options = list(pagelength = 100))
+
+```
+
+Below is a summary including the statistics of the dataset;
+
+```{r}
+
+summary(ContactRate)
+
+```
+
+## Methodology
+
+A boxplot is used to visulize the data. Below is an example of a box plot.
+
+<!-- ![](W@S_boxplot-labels.png) -->
+
+Definitions
+
+* Median: The median (middle quartile) marks the mid-point of the data and is shown by the line that divides the box into two parts. Half the scores are greater than or equal to this value and half are less.
+
+* Inter-quartile range: The middle "box" represents the middle 50% of scores for the group. The range of scores from lower to upper quartile is referred to as the inter-quartile range. The middle 50% of scores fall within the inter-quartile range.
+
+* Upper quartile: Seventy-five percent of the scores fall below the upper quartile.
+
+* Lower quartile: Twenty-five percent of scores fall below the lower quartile.
+
+* Whiskers: The upper and lower whiskers represent scores outside the middle 50%. Whiskers often (but not always) stretch over a wider range of scores than the middle quartile groups.
+
+* Outliers: Points outside the whiskers, which is either greater or smaller than 1.5 Inter-quartile range
+
+## Results
+
+```{r}
+plot_ly(ContactRate,y= ~ContactRate,color = ~Group, type = "box")%>%
+  layout(title = "Contact Rate Comparison",
+         xaxis=list(title = "Group"),
+         yaxis=list(title = "Contact Rate"))
+```
+
+
+
+Seen in the boxplot above, group B has a higher median contact rate (42%) than group A (40%). Also group B is more likely to reach a higher contact rate because the upper whisker is higher at 71% compared to group A at 63%. Therefore, by customizing the # of calls for each PL, a higher contact rate is anticipated.
+
+
+
+```{r}
+plot_ly(ContactRate, x = ~Region, y = ~ContactRate, color = ~Group, type = "box") %>%
+  layout(boxmode = "group",
+         xaxis=list(title = "Region"),
+         yaxis=list(title = "Contact Rate"),
+         title = "Contact Rare Comparison by Region")
+
+```
+
+
+
+The boxplot above shows a break down of group A and group B by region. Switching to a customized call plan presents greater results (better contact rate) for the newer,widespread regions (AL, IN) whereas slight/flat results are presented in the denser, established regions (MDN, NJS,VAN).
+
+
+
+```{r}
+plot_ly(ContactRate,y= ~ContactRate,color = ~CallBucket, type = "box")%>%
+  layout(title = "Contact Rate Comparison by Call Bucket",
+         xaxis = list(title ="Call Bucket"),
+         yaxis = list(title = "Contact Rate"))
+```
+
+
+
+
+From the boxplot above, at 15 calls per day, the medium contact rate is 40%. For the regions that require a lower number of calls, like Indiana, Michigan and Alabama, by dropping the number of calls per day, more effective calls are completed (higher contact rate). The median contact rate for 10, 12 and 13 calls is 0.48,0.42 and 0.42 respectively.
+
+
+
+The last step is to perform ANOVA test to see if the difference in median we saw on the box plot is statistically significant. The output below shows the F value and P value.
+
+```{r}
+result <- aov(ContactRate~CallBucket,data = ContactRate)
+summary(result)
+```
+
+We can see that since the P value is less than 0.05, we can conclude that there are significant differences of the contact rate between different call buckets as highlighted with "*" in the model summary.
+
+Further Analysis below shows which two call bucket groups have a significant difference in contact rate (when p value less than 0.05).
+
+```{r}
+TukeyHSD(result)
+```
+
+
+
+
+## Conclusion
+
+Based on the results of the analysis, customizing call plans by territory has proven to be a successful strategy for higher quality visits.Further statistical analysis (T-test) indicates that the results are statistically significant.
+
+The recommendation moving forward is to continue optimizing call plans per territory in order to maximize contact rate for the ultimate goal of producing better quality visits and increased penetration rates.
+
